@@ -1103,7 +1103,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
       }
       renderedFeedSignature = newFeedSig;
       c.innerHTML = '';
-      const myBlocked = DB.users[currentUser]?.blocked || {};
+      //const myBlocked = DB.users[currentUser]?.blocked || {};
       let arr = Object.values(normMap(DB.posts)).filter(p => !myBlocked[p.author]).sort((a,b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.timestamp - a.timestamp);
       const myF = DB.users[currentUser]?.following || {};
       if(feedFilter === 'following') arr = arr.filter(p => myF[p.author] || p.author === currentUser);
