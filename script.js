@@ -200,17 +200,41 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
     try { if(firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") { app = initializeApp(firebaseConfig); db = getDatabase(app); } } catch(e) {}
 
     if(db) {
+      const fbFallbackTimer = setTimeout(() => {
+        if(!isFirebaseActive) enableLocalMode();
+      }, 2500);
+
       onValue(ref(db, '/'), (snap) => {
+        clearTimeout(fbFallbackTimer);
         const d = snap.val() || {};
-        DB = { users: d.users||{}, posts: d.posts||{}, stories: d.stories||{}, messages: d.messages||{}, typing: d.typing||{}, notifications: d.notifications||{}, notes: d.notes||{}, calls: d.calls||{}, callHistory: d.callHistory||{} };
+        DB = {
+          users: d.users || {},
+          posts: d.posts || {},
+          stories: d.stories || {},
+          messages: d.messages || {},
+          typing: d.typing || {},
+          notifications: d.notifications || {},
+          notes: d.notes || {},
+          calls: d.calls || {},
+          callHistory: d.callHistory || {}
+        };
         isFirebaseActive = true;
         document.getElementById('db-status').innerText = '● Live Server Connected';
         document.getElementById('loginBtn').disabled = false;
-        if(currentUser && DB.users[currentUser]) { document.getElementById('login-view').classList.add('hidden'); document.getElementById('app-container').classList.remove('hidden'); }
+        if(currentUser && DB.users[currentUser]) {
+          document.getElementById('login-view').classList.add('hidden');
+          document.getElementById('app-container').classList.remove('hidden');
+        }
         checkIncomingCalls();
         updateUI();
-      }, () => enableLocalMode());
-    } else enableLocalMode();
+      }, (error) => {
+        console.warn("Firebase sync error, switching to local fallback:", error);
+        clearTimeout(fbFallbackTimer);
+        enableLocalMode();
+      });
+    } else {
+      enableLocalMode();
+    }
 
     function enableLocalMode() {
       document.getElementById('db-status').innerHTML = '<span class="text-sky-400">● Local Mode Active</span>';
