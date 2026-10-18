@@ -615,62 +615,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
       incomingCallData = null;
     };
 
-    window.rejectIncomingCall = () => {
-      if (incomingCallData) apiSet(`calls/${incomingCallData.id}/status`, 'rejected');
-      document.getElementById('incomingCallModal').classList.add('hidden');
-      incomingCallData = null;
-    };
-
-    function startCallTimer() {
-      let sec = 0; clearInterval(callTimerInt);
-      callTimerInt = setInterval(() => {
-        sec++;
-        document.getElementById('callTimerText').innerText = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
-      }, 1000);
-    }
-
-    window.toggleCallMic = () => {
-      if (localStream && localStream.getAudioTracks()[0]) {
-        const track = localStream.getAudioTracks()[0];
-        track.enabled = !track.enabled;
-        const btn = document.getElementById('micToggleBtn');
-        if (btn) {
-          btn.innerText = track.enabled ? '🎤' : '🔇';
-          btn.className = track.enabled 
-            ? 'w-12 h-12 rounded-full bg-white/15 text-white flex items-center justify-center text-lg' 
-            : 'w-12 h-12 rounded-full bg-rose-600/80 text-white flex items-center justify-center text-lg shadow-lg';
-        }
-        window.showToast(track.enabled ? "Mic Unmuted 🎤" : "Mic Muted 🔇");
-      }
-    };
-    window.toggleCallCam = () => { 
-      if (localStream && localStream.getVideoTracks()[0]) {
-        const track = localStream.getVideoTracks()[0];
-        track.enabled = !track.enabled;
-        const btn = document.getElementById('camToggleBtn');
-        if (btn) {
-          btn.innerText = track.enabled ? '📷' : '🚫';
-          btn.className = track.enabled 
-            ? 'w-12 h-12 rounded-full bg-white/15 text-white flex items-center justify-center text-lg' 
-            : 'w-12 h-12 rounded-full bg-rose-600/80 text-white flex items-center justify-center text-lg shadow-lg';
-        }
-        window.showToast(track.enabled ? "Camera On 📷" : "Camera Off 🚫");
-      }
-    };
-    window.endCall = () => {
-      const micBtn = document.getElementById('micToggleBtn');
-      if (micBtn) { micBtn.innerText = '🎤'; micBtn.className = 'w-12 h-12 rounded-full bg-white/15 text-white flex items-center justify-center text-lg'; }
-      const camBtn = document.getElementById('camToggleBtn');
-      if (camBtn) { camBtn.innerText = '📷'; camBtn.className = 'w-12 h-12 rounded-full bg-white/15 text-white flex items-center justify-center text-lg'; }
-      document.getElementById('callModal').classList.add('hidden');
-      document.getElementById('incomingCallModal').classList.add('hidden');
-      clearInterval(callTimerInt);
-      if(localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-      if(peerConnection) { peerConnection.close(); peerConnection = null; }
-      if(activeCallId) { apiSet(`calls/${activeCallId}/status`, 'ended'); activeCallId = null; }
-      incomingCallData = null;
-    };
-
     window.toggleBlockUser = (target) => {
       if(!target || target === currentUser) return;
       const isB = DB.users[currentUser]?.blocked && DB.users[currentUser].blocked[target];
