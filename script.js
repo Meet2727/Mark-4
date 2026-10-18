@@ -199,25 +199,42 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
 
     try { if(firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") { app = initializeApp(firebaseConfig); db = getDatabase(app); } } catch(e) {}
 
+// --- SMART SELF-HEALING LIVE FIREBASE BOOTSTRAP ---
     if(db) {
-      const fbFallbackTimer = setTimeout(() => {
-        if(!isFirebaseActive) enableLocalMode();
-      }, 2500);
-
       onValue(ref(db, '/'), (snap) => {
-        clearTimeout(fbFallbackTimer);
-        const d = snap.val() || {};
-        DB = {
-          users: d.users || {},
-          posts: d.posts || {},
-          stories: d.stories || {},
-          messages: d.messages || {},
-          typing: d.typing || {},
-          notifications: d.notifications || {},
-          notes: d.notes || {},
-          calls: d.calls || {},
-          callHistory: d.callHistory || {}
-        };
+        const d = snap.val();
+        if (!d || Object.keys(d).length === 0) {
+          // Agar Firebase database bilkul khali hai, toh default structure push kar do
+          const initialData = {
+            users: {},
+            posts: {},
+            stories: {},
+            messages: {},
+            typing: {},
+            notifications: {},
+            notes: {},
+            calls: {},
+            callHistory: {},
+            secrets: {},
+            snippets: {}
+          };
+          set(ref(db, '/'), initialData);
+          DB = initialData;
+        } else {
+          DB = {
+            users: d.users || {},
+            posts: d.posts || {},
+            stories: d.stories || {},
+            messages: d.messages || {},
+            typing: d.typing || {},
+            notifications: d.notifications || {},
+            notes: d.notes || {},
+            calls: d.calls || {},
+            callHistory: d.callHistory || {},
+            secrets: d.secrets || {},
+            snippets: d.snippets || {}
+          };
+        }
         isFirebaseActive = true;
         document.getElementById('db-status').innerText = '● Live Server Connected';
         document.getElementById('loginBtn').disabled = false;
@@ -228,9 +245,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
         checkIncomingCalls();
         updateUI();
       }, (error) => {
-        console.warn("Firebase sync error, switching to local fallback:", error);
-        clearTimeout(fbFallbackTimer);
-        enableLocalMode();
+        console.error("Firebase connection permission or network error:", error);
+        window.showToast("Firebase connection error! Check database rules.", "error");
       });
     } else {
       enableLocalMode();
